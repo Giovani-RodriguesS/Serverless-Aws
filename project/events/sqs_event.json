@@ -1,0 +1,18 @@
+{
+  "Records": [
+    {
+      "messageId": "123",
+      "body": "Test message"
+    },
+    
+    {
+      "messageId": "4",
+      "body": "Tes"
+    }, 
+    {
+      "messageId": "5",
+      "body": "{\"name\": \"Giovani\", \"age\": \"20\"}"
+    }
+
+  ]
+}

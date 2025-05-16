@@ -1,0 +1,13 @@
+Documentar
+- DynamoDB [ ]
+- Lambda [X]
+- Serviços Lambdas
+    - Writer []
+    - Register []
+    - Query []
+- Front-End
+    - S3 []
+- Filas []
+- Step Functions []
+- SAM CLI [X]
+- CloudFormation [X]

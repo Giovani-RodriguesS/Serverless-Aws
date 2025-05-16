@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Sistema de Microservi\xE7os com Fun\xE7\xF5es Lambda"
+Parameters:
+  Env:
+    Type: String
+    Default: dev
+    AllowedValues:
+    - dev
+    - prod
+  RoleArn:
+    Type: String
+    Default: arn:aws:iam::058264100464:role/LabRole
+  QueueName:
+    Type: String
+    Default: register-queue
+Resources:
+  LambdaFunctions:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName:
+        Ref: QueueName
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      MessageRetentionPeriod: 86400
+    SqsQueue: null
+Outputs:
+  QueueUrl:
+    Value:
+      Ref: SqsQueue
+  SQSQueueARN:
+    Description: ARN da fila SQS
+    Value:
+      Fn::GetAtt:
+      - SqsQueue
+      - Arn

@@ -1,0 +1,11 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "services-test"
+resolve_s3 = true
+s3_prefix = "services-test"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_AUTO_EXPAND"
+disable_rollback = true
+parameter_overrides = "Environment=\"dev\""
+image_repositories = []
