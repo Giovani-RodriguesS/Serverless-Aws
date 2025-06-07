@@ -4,10 +4,13 @@ Description: "Stack Grava\xE7\xE3o de dados Ass\xEDncrona"
 Parameters:
   TableName:
     Type: String
-    Default: test123
+    Default: DataTable
   RoleArn:
     Type: String
     Description: ARN of the IAM role for Lambda functions
+  BucketName:
+    Type: String
+    Default: data-bucket-370819
 Globals:
   Function:
     Timeout: 5
@@ -16,122 +19,25 @@ Globals:
     Architectures:
     - x86_64
 Resources:
-  WriterQueue:
-    Type: AWS::SQS::Queue
+  DataBucket:
+    Type: AWS::S3::Bucket
     Properties:
-      QueueName: WriterQueue
-  Table:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName:
-        Ref: TableName
-      AttributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
-      - AttributeName: name
-        AttributeType: S
-      KeySchema:
-      - AttributeName: id
-        KeyType: HASH
-      - AttributeName: name
-        KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
-  RegisterFunction:
+      BucketName:
+        Ref: BucketName
+  Transformer:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: go1.x
-      SamResourceId: RegisterFunction
+      SamResourceId: Transformer
     Properties:
-      CodeUri: RegisterFunction
+      CodeUri: Transformer
       Handler: bootstrap
       Role:
         Ref: RoleArn
-      Environment:
-        Variables:
-          ENV: cloud
-          QUEUE_URL:
-            Fn::GetAtt:
-            - WriterQueue
-            - QueueUrl
-      Policies:
-      - SQSSendMessagePolicy:
-          QueueName: WriterQueue
-      - Statement:
-        - Effect: Allow
-          Action:
-          - logs:CreateLogGroup
-          - logs:CreateLogStream
-          - logs:PutLogEvents
-          Resource: '*'
-  WriterFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: go1.x
-      SamResourceId: WriterFunction
-    Properties:
-      CodeUri: WriterFunction
-      Handler: bootstrap
-      Role:
-        Ref: RoleArn
-      Environment:
-        Variables:
-          TABLE_NAME:
-            Ref: TableName
-          ENV: cloud
       Events:
-        SQSEvent:
-          Type: SQS
+        S3Event:
+          Type: S3
           Properties:
-            Queue:
-              Fn::GetAtt:
-              - WriterQueue
-              - Arn
-            BatchSize: 10
-            Enabled: true
-      Policies:
-      - DynamoDBWritePolicy:
-          TableName:
-            Ref: TableName
-      - Statement:
-        - Effect: Allow
-          Action:
-          - logs:CreateLogGroup
-          - logs:CreateLogStream
-          - logs:PutLogEvents
-          Resource: '*'
-        - Effect: Allow
-          Action:
-          - sqs:ReceiveMessage
-          - sqs:DeleteMessage
-          - sqs:GetQueueAttributes
-          Resource:
-            Fn::GetAtt:
-            - WriterQueue
-            - Arn
-  ApiGateway:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: dev
-      DefinitionBody:
-        swagger: '2.0'
-        info:
-          title: EntryPointAPI
-        paths:
-          /register:
-            post:
-              x-amazon-apigateway-integration:
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegisterFunction.Arn}/invocations
-                httpMethod: POST
-                type: aws_proxy
-      Auth:
-        DefaultAuthorizer: NONE
-  ApiGatewayPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Ref: RegisterFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn:
-        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/POST/register
+            Bucket:
+              Ref: DataBucket
+            Events: s3:ObjectCreated:*

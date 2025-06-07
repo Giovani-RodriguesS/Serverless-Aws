@@ -1,4 +1,4 @@
-# Documentação do AWS DynamoDB em Ambiente Serverless Local
+# AWS DynamoDB em Ambiente Serverless Local
 
 ## Conexão entre AWS Lambda e DynamoDB Local
 

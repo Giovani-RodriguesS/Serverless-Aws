@@ -16,12 +16,12 @@ lint = true
 capabilities = "CAPABILITY_AUTO_EXPAND"
 confirm_changeset = true
 resolve_s3 = true
-stack_name = "register-writer"
-s3_prefix = "register-writer"
+stack_name = "transformer"
+s3_prefix = "transformer"
 region = "us-east-1"
 disable_rollback = true
 image_repositories = []
-parameter_overrides = "TableName=\"test123\" RoleArn=\"arn:aws:iam::058264100464:role/LabRole\""
+parameter_overrides = "TableName=\"DataTable\" RoleArn=\"arn:aws:iam::058264100464:role/LabRole\" BucketName=\"data-bucket-370819\""
 
 [default.package.parameters]
 resolve_s3 = true

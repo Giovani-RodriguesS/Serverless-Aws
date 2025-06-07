@@ -5,7 +5,8 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=sqs,lambda,dynamodb,apigateway,cloudformation,iam,s3
+      - SERVICES=s3, lambda
       - AWS_DEFAULT_REGION=us-east-1
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - ".:/etc/localstack/resources"
