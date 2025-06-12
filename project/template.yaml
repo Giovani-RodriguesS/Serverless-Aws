@@ -1,7 +1,7 @@
 # Doc Referencia https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Stack Gravação de dados Assíncrona
+Description: Stack recursos IT
 
 Parameters:
   TableName:
@@ -16,7 +16,7 @@ Parameters:
 
 Globals:
   Function:
-    Timeout: 5
+    Timeout: 60
     MemorySize: 128
     Runtime: provided.al2023
     Architectures:
