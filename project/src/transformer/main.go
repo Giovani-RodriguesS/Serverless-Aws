@@ -41,8 +41,10 @@ func handler(ctx context.Context, s3Event events.S3Event) {
 			log.Fatalf("Falha ao baixar o arquivo %s, %v", key, err)
 		}
 
+		content := buff.Bytes()[:numBytes]
+
 		fmt.Print("Conteudo do arquivo baixado:\n")
-		fmt.Printf("%s\n", buff.Bytes()[:numBytes])
+		fmt.Printf("%s\n", content)
 	}
 }
 func main() {
