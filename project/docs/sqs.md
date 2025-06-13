@@ -2,7 +2,7 @@
 
 O AWS SQS é um serviço de filas de mensagens da AWS que permite **desacoplar** e **escalar** aplicações.
 
-**Como Funciona:**
+**Conceitos:**
 * **Produtores** enviam mensagens para uma fila SQS.
 * O SQS **armazena** essas mensagens.
 * **Consumidores** recebem, processam e, após sucesso, **excluem** as mensagens.
