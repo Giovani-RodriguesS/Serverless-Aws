@@ -45,6 +45,12 @@ func handler(ctx context.Context, s3Event events.S3Event) {
 
 		fmt.Print("Conteudo do arquivo baixado:\n")
 		fmt.Printf("%s\n", content)
+
+		// Implementar logica de validar se é uma lista de JSONs ou um único JSON
+		
+		// Registrar erro em bucket de logs caso haja
+		// enviar dados para fila SQS Transformer/register caso haja sucesso
+		// Estudar implementação de testes e estudar GO 
 	}
 }
 func main() {
