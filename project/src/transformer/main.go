@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"transformer/sqs"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -23,6 +23,8 @@ func handler(ctx context.Context, s3Event events.S3Event) {
 	}
 
 	downloader := s3manager.NewDownloader(sess)
+	
+
 	for _, record := range s3Event.Records {
 		bucket := record.S3.Bucket.Name
 		key := record.S3.Object.Key
@@ -41,11 +43,16 @@ func handler(ctx context.Context, s3Event events.S3Event) {
 			log.Fatalf("Falha ao baixar o arquivo %s, %v", key, err)
 		}
 
-		content := buff.Bytes()[:numBytes]
+		payload := buff.Bytes()[:numBytes]
+		
+		// Mensageria
+		err = sqs.PostMessages(string(payload))
 
-		fmt.Print("Conteudo do arquivo baixado:\n")
-		fmt.Printf("%s\n", content)
-	}
+		if err != nil {
+			log.Fatalf("Erro ao enviar mensagem para SQS: %v", err)
+		}
+
+		}
 }
 func main() {
 	lambda.Start(handler)

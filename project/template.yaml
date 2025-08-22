@@ -16,7 +16,7 @@ Parameters:
 
 Globals:
   Function:
-    Timeout: 60
+    Timeout: 120
     MemorySize: 128
     Runtime: provided.al2023
     Architectures:
@@ -27,8 +27,52 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref BucketName
+  WriterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: WriterQueue
+      VisibilityTimeout: 300
+#
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: name
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+#
+#  RegisterFunction:
+#    Type: AWS::Serverless::Function
+#    Metadata:
+#      BuildMethod: go1.x
+#    Properties:
+#      CodeUri: src/register/
+#      Handler: bootstrap
+#      Role: !Ref RoleArn
+#      Environment:
+#        Variables:
+#          ENV: cloud
+#          QUEUE_URL: !GetAtt WriterQueue.QueueUrl
+#      Policies:
+#        - SQSSendMessagePolicy:
+#            QueueName: WriterQueue
+#        - Statement:
+#            - Effect: Allow
+#              Action:
+#                - logs:CreateLogGroup
+#                - logs:CreateLogStream
+#                - logs:PutLogEvents
+#              Resource: '*'
 
-  Transformer:
+  TransformerFunction:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: go1.x
@@ -36,92 +80,53 @@ Resources:
       CodeUri: src/transformer/
       Handler: bootstrap
       Role: !Ref RoleArn
+      Environment:
+        Variables:
+          FUNCTION_NAME: !Ref RegisterFunction
+          ENV: cloud
+          QUEUE_URL: !GetAtt WriterQueue.QueueUrl
       Events:
         S3Event:
           Type: S3
           Properties:
             Bucket: !Ref DataBucket
             Events: s3:ObjectCreated:*
-
-  #WriterQueue:
-  #  Type: AWS::SQS::Queue
-  #  Properties:
-  #    QueueName: WriterQueue
 #
-  #Table:
-  #  Type: AWS::DynamoDB::Table
-  #  Properties:
-  #    TableName: !Ref TableName
-  #    AttributeDefinitions:
-  #      - AttributeName: id
-  #        AttributeType: S
-  #      - AttributeName: name
-  #        AttributeType: S
-  #    KeySchema:
-  #      - AttributeName: id
-  #        KeyType: HASH
-  #      - AttributeName: name
-  #        KeyType: RANGE
-  #    BillingMode: PAY_PER_REQUEST
-#
-  #RegisterFunction:
-  #  Type: AWS::Serverless::Function
-  #  Metadata:
-  #    BuildMethod: go1.x
-  #  Properties:
-  #    CodeUri: src/register/
-  #    Handler: bootstrap
-  #    Role: !Ref RoleArn
-  #    Environment:
-  #      Variables:
-  #        ENV: cloud
-  #        QUEUE_URL: !GetAtt WriterQueue.QueueUrl
-  #    Policies:
-  #      - SQSSendMessagePolicy:
-  #          QueueName: WriterQueue
-  #      - Statement:
-  #          - Effect: Allow
-  #            Action:
-  #              - logs:CreateLogGroup
-  #              - logs:CreateLogStream
-  #              - logs:PutLogEvents
-  #            Resource: '*'
-#
-  #WriterFunction:
-  #  Type: AWS::Serverless::Function
-  #  Metadata:
-  #    BuildMethod: go1.x
-  #  Properties:
-  #    CodeUri: src/writer/
-  #    Handler: bootstrap
-  #    Role: !Ref RoleArn
-  #    Environment:
-  #      Variables:
-  #        TABLE_NAME: !Ref TableName
-  #        ENV: cloud
-  #    Events:
-  #      SQSEvent:
-  #        Type: SQS
-  #        Properties:
-  #          Queue: !GetAtt WriterQueue.Arn
-  #          BatchSize: 10
-  #          Enabled: true
-  #    Policies:
-  #      - DynamoDBWritePolicy:
-  #          TableName: !Ref TableName
-  #      - Statement:
-  #          - Effect: Allow
-  #            Action:
-  #              - logs:CreateLogGroup
-  #              - logs:CreateLogStream
-  #              - logs:PutLogEvents
-  #            Resource: '*'
-  #          - Effect: Allow
-  #            Action:
-  #              - sqs:ReceiveMessage
-  #              - sqs:DeleteMessage
-  #              - sqs:GetQueueAttributes
-  #            Resource: !GetAtt WriterQueue.Arn
+  WriterFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: src/writer/
+      Handler: bootstrap
+      Role: !Ref RoleArn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          ENV: cloud
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt WriterQueue.Arn
+            BatchSize: 10
+            Enabled: true
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref TableName
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - sqs:ReceiveMessage
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+              Resource: !GetAtt WriterQueue.Arn
 #
   #ApiGateway:
   #  Type: AWS::Serverless::Api

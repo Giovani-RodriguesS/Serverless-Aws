@@ -12,6 +12,7 @@ import (
 
 type Product struct {
 	Nome string `json:"nome"`
+	Cargo string `json:"cargo"`
 }
 
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
