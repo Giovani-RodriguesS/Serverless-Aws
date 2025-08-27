@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"log"
-	"transformer/sqs"
+	"fmt"
+	"github.com/Giovani-RodriguesS/Serverless-Aws/project/src/pkg/sqs"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -19,17 +19,17 @@ func handler(ctx context.Context, s3Event events.S3Event) {
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("Erro ao criar sessão: %v\n", err)
+		return
 	}
 
 	downloader := s3manager.NewDownloader(sess)
-	
 
 	for _, record := range s3Event.Records {
 		bucket := record.S3.Bucket.Name
 		key := record.S3.Object.Key
 
-		log.Printf("Baixando arquivo %s do bucket %s", key, bucket)
+		fmt.Printf("Baixando arquivo %s do bucket %s", key, bucket)
 
 		buff := &aws.WriteAtBuffer{}
 
@@ -38,21 +38,20 @@ func handler(ctx context.Context, s3Event events.S3Event) {
 				Bucket: aws.String(bucket),
 				Key:    aws.String(key),
 			})
-		
+
 		if err != nil {
-			log.Fatalf("Falha ao baixar o arquivo %s, %v", key, err)
+			fmt.Printf("Falha ao baixar o arquivo %s, %v", key, err)
 		}
 
 		payload := buff.Bytes()[:numBytes]
-		
+
 		// Mensageria
 		err = sqs.PostMessages(string(payload))
 
 		if err != nil {
-			log.Fatalf("Erro ao enviar mensagem para SQS: %v", err)
+			fmt.Printf("Erro ao enviar mensagem para SQS: %v", err)
 		}
-
-		}
+	}
 }
 func main() {
 	lambda.Start(handler)

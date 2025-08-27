@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"writer/internal/utils"
+	"github.com/Giovani-RodriguesS/Serverless-Aws/project/src/pkg/utils"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -13,19 +13,19 @@ import (
 )
 
 func ConnDB(ctx context.Context) (*dynamodb.Client, error) {
-	
+
 	var cfg aws.Config
 	var err error
 	env := os.Getenv("ENV")
 
-	if env == "local"{
+	if env == "local" {
 		region := os.Getenv("AWS_DEFAULT_REGION")
 		URL := os.Getenv("DB_URL")
-		cfg, err =  utils.GetConfig(ctx, region, URL)
+		cfg, err = utils.GetConfig(ctx, region, URL)
 	} else {
 		cfg, err = config.LoadDefaultConfig(ctx)
 	}
-	
+
 	if err != nil {
 		log.Fatalf("erro ao carregar configurações no DynamoDB: %v", err)
 		return nil, err

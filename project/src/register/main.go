@@ -3,38 +3,64 @@ package main
 import (
 	//"context"
 	"encoding/json"
-	"log"
+	"fmt"
+
+	"github.com/Giovani-RodriguesS/Serverless-Aws/project/src/pkg/models"
+	"github.com/Giovani-RodriguesS/Serverless-Aws/project/src/pkg/sqs"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"register/sqs"
 )
 
-type Product struct {
-	Nome string `json:"nome"`
-	Cargo string `json:"cargo"`
-}
+func parseJsonToItem(body string) (any, error) {
+	var data models.Data
+	if err := json.Unmarshal([]byte(body), &data); err != nil {
+		return nil, err
+	}
 
+	switch data.Type {
+	case "account":
+		var acc models.Account
+		if err := json.Unmarshal(data.Data, &acc); err != nil {
+			return nil, err
+		}
+
+		return &acc, nil
+
+	case "transaction":
+		var tsc models.Transaction
+		if err := json.Unmarshal(data.Data, &tsc); err != nil {
+			return nil, err
+		}
+		return &tsc, nil
+
+	default:
+		return nil, fmt.Errorf("tipo não reconhecido: %s", data.Type)
+	}
+}
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	var product Product
 	// Deserialização do JSON
-	err := json.Unmarshal([]byte(request.Body), &product)
+	item, err := parseJsonToItem(request.Body)
 
 	if err != nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: 400,
-			Body:       "JSON inválido",
+			Body:       "JSON inválido ou vazio",
 		}, nil
 	}
 
 	// Serialização do JSON
-	json, err := json.Marshal(product)
+	jsonBytes, err := json.Marshal(item)
 
 	if err != nil {
-		log.Fatalf("Erro ao converter produto para JSON: %v", err)
+		fmt.Printf("Erro ao converter produto para JSON: %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: 500,
+			Body:       "Erro ao converter produto para JSON",
+		}, nil
 	}
 
-	msg := string(json)
+	msg := string(jsonBytes)
 
 	// Mensageria
 	err = sqs.PostMessages(msg)
