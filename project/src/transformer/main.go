@@ -51,6 +51,7 @@ func handler(ctx context.Context, s3Event events.S3Event) {
 		if err != nil {
 			fmt.Printf("Erro ao enviar mensagem para SQS: %v", err)
 		}
+
 	}
 }
 func main() {
