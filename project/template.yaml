@@ -16,22 +16,22 @@ Parameters:
 
 Globals:
   Function:
-    Timeout: 120
+    Timeout: 25
     MemorySize: 128
     Runtime: provided.al2023
     Architectures:
       - x86_64
 
 Resources:
-  DataBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Ref BucketName
+#  DataBucket:
+#    Type: AWS::S3::Bucket
+#    Properties:
+#      BucketName: !Ref BucketName
   WriterQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: WriterQueue
-      VisibilityTimeout: 300
+
 #
   Table:
     Type: AWS::DynamoDB::Table
@@ -72,25 +72,25 @@ Resources:
 #                - logs:PutLogEvents
 #              Resource: '*'
 
-  TransformerFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: go1.x
-    Properties:
-      CodeUri: src/transformer/
-      Handler: bootstrap
-      Role: !Ref RoleArn
-      Environment:
-        Variables:
-          FUNCTION_NAME: !Ref RegisterFunction
-          ENV: cloud
-          QUEUE_URL: !GetAtt WriterQueue.QueueUrl
-      Events:
-        S3Event:
-          Type: S3
-          Properties:
-            Bucket: !Ref DataBucket
-            Events: s3:ObjectCreated:*
+#  TransformerFunction:
+#    Type: AWS::Serverless::Function
+#    Metadata:
+#      BuildMethod: go1.x
+#    Properties:
+#      CodeUri: src/transformer/
+#      Handler: bootstrap
+#      Role: !Ref RoleArn
+#      Environment:
+#        Variables:
+#          FUNCTION_NAME: !Ref RegisterFunction
+#          ENV: cloud
+#          QUEUE_URL: !GetAtt WriterQueue.QueueUrl
+#      Events:
+#        S3Event:
+#          Type: S3
+#          Properties:
+#            Bucket: !Ref DataBucket
+#            Events: s3:ObjectCreated:*
 #
   WriterFunction:
     Type: AWS::Serverless::Function
@@ -128,24 +128,26 @@ Resources:
                 - sqs:GetQueueAttributes
               Resource: !GetAtt WriterQueue.Arn
 #
-  #ApiGateway:
-  #  Type: AWS::Serverless::Api
-  #  Properties:
-  #    StageName: dev
-  #    DefinitionBody:
-  #      swagger: '2.0'
-  #      info:
-  #        title: EntryPointAPI
-  #      paths:
-  #        /register:
-  #          post:
-  #            x-amazon-apigateway-integration:
-  #              uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegisterFunction.Arn}/invocations'
-  #              httpMethod: POST
-  #              type: aws_proxy
-  #    Auth:
-  #      DefaultAuthorizer: NONE
-#
+  ApiGateway:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: dev
+    Auth:
+      DefaultAuthorizer: NONE
+
+# Integration API Gateway -> SQS
+  SqsIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiGateway
+      IntegrationType: AWS_PROXY
+      IntegrationSubtype: SQS-SendMessage
+      CredentialsArn: !Ref RoleArn
+      RequestParameters:
+        QueueUrl: !Ref WriterQueue
+        MessageBody: "$request.body"
+      PayloadFormatVersion: "1.0"
+
   #ApiGatewayPermission:
   #  Type: AWS::Lambda::Permission
   #  Properties:
