@@ -56,7 +56,6 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 
 	for _, message := range sqsEvent.Records {
 		fmt.Printf("processando mensagem ID: %s, Body: %s", message.MessageId, message.Body)
-		fmt.Print(message.MessageId)
 
 		// Deserialização do JSON
 		data, err := parseJsonToItem(message.Body)

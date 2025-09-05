@@ -26,32 +26,31 @@ func ValidateJson(text string) error {
 		if err != nil {
 			fmt.Printf("Erro ao validar o json: %v", err)
 		}
-		
-		// Faça a logica de mandar para a fila SQS 
+
+		// Faça a logica de mandar para a fila SQS
 		// Crie a logica de reportar erro ao Error Handler
 		// Organize melhor a estrutura
 	} else if strings.HasPrefix(trimmedText, "[") && strings.HasSuffix(trimmedText, "]") {
 		var jsonList []MyObject
-		
+
 		decoderText := json.NewDecoder(bytes.NewReader([]byte(trimmedText)))
 		decoderText.DisallowUnknownFields() // Não pode campos desconhecidos
-		
+
 		err := decoderText.Decode(&jsonList)
 
 		if err != nil {
 			fmt.Printf("Erro ao converter lista: %v", err)
 		}
-	
+
 		fmt.Print(jsonList)
-		
+
 		return nil
 	}
-
 
 	return nil
 }
 
-func main (){
+func main() {
 	//text := `{"name": "Item A", "value": 10}`
 	text := `[{"name": "Item B", "value": 20}, {"name": "Item C", "value": 30}]`
 	ValidateJson(text)

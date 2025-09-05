@@ -1,5 +1,15 @@
 # AWS DynamoDB em Ambiente Serverless Local
 
+- [Implantação DynamoDB local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.DownloadingAndRunning.html)
+- [Refs DynamoDB local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html)
+
+Podemos usar a AWS Command Line Interface (AWS CLI) para interagir com o DynamoDB.
+
+Para acessar o DynamoDB em execução local, use o --endpoint-url parâmetro:
+```bash
+aws dynamodb list-tables --endpoint-url http://localhost:8000
+```
+
 ## Conexão entre AWS Lambda e DynamoDB Local
 
 A conexão entre AWS Lambda e DynamoDB em ambiente local foi implementada em várias etapas:

@@ -4,94 +4,143 @@ Transform: AWS::Serverless-2016-10-31
 Description: Stack recursos IT
 
 Parameters:
-  TableName:
+  WriterQueueName:
+    Type: String
+    Default: WriterQueue
+  AccountTableName:
     Type: String
     Default: DataTable
+  LogTableName:
+    Type: String
+    Default: LogTable
   RoleArn:
     Type: String
     Description: ARN of the IAM role for Lambda functions
   BucketName:
     Type: String
-    Default: data-bucket-370819
+    Default: data-bucket-471112928175
 
 Globals:
   Function:
-    Timeout: 25
+    Timeout: 60
     MemorySize: 128
     Runtime: provided.al2023
     Architectures:
       - x86_64
 
 Resources:
-#  DataBucket:
-#    Type: AWS::S3::Bucket
-#    Properties:
-#      BucketName: !Ref BucketName
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 70
+      QueueName: DeadLetterQueue
+      MessageRetentionPeriod: 300
+
   WriterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: WriterQueue
+      QueueName: !Ref WriterQueueName
+      VisibilityTimeout: 70
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: 2
 
-#
-  Table:
+  AccountTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Ref TableName
+      TableName: !Ref AccountTableName
       AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-        - AttributeName: name
+        - AttributeName: AccountID
           AttributeType: S
       KeySchema:
-        - AttributeName: id
+        - AttributeName: AccountID
           KeyType: HASH
-        - AttributeName: name
-          KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
-#
-#  RegisterFunction:
-#    Type: AWS::Serverless::Function
-#    Metadata:
-#      BuildMethod: go1.x
-#    Properties:
-#      CodeUri: src/register/
-#      Handler: bootstrap
-#      Role: !Ref RoleArn
-#      Environment:
-#        Variables:
-#          ENV: cloud
-#          QUEUE_URL: !GetAtt WriterQueue.QueueUrl
-#      Policies:
-#        - SQSSendMessagePolicy:
-#            QueueName: WriterQueue
-#        - Statement:
-#            - Effect: Allow
-#              Action:
-#                - logs:CreateLogGroup
-#                - logs:CreateLogStream
-#                - logs:PutLogEvents
-#              Resource: '*'
+  
+  LogTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref LogTableName
+      AttributeDefinitions:
+        - AttributeName: ID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ID
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
 
-#  TransformerFunction:
-#    Type: AWS::Serverless::Function
-#    Metadata:
-#      BuildMethod: go1.x
-#    Properties:
-#      CodeUri: src/transformer/
-#      Handler: bootstrap
-#      Role: !Ref RoleArn
-#      Environment:
-#        Variables:
-#          FUNCTION_NAME: !Ref RegisterFunction
-#          ENV: cloud
-#          QUEUE_URL: !GetAtt WriterQueue.QueueUrl
-#      Events:
-#        S3Event:
-#          Type: S3
-#          Properties:
-#            Bucket: !Ref DataBucket
-#            Events: s3:ObjectCreated:*
-#
+  ErrorHandlerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: src/error_handler/
+      Handler: bootstrap
+      Role: !Ref RoleArn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref LogTableName
+          ENV: cloud
+      Events:
+        DQLEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt DeadLetterQueue.Arn
+            BatchSize: 10
+            Enabled: true
+            FunctionResponseTypes:
+            - ReportBatchItemFailures
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref LogTableName
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - sqs:ReceiveMessage
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+              Resource: !GetAtt DeadLetterQueue.Arn
+
+  TransformerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: src/transformer/
+      Handler: bootstrap
+      Role: !Ref RoleArn
+      Environment:
+        Variables:
+          ENV: cloud
+          QUEUE_URL: !GetAtt WriterQueue.QueueUrl
+      Events:
+        S3Event:
+          Type: S3
+          Properties:
+            Bucket: !Ref DataBucket
+            Events: s3:ObjectCreated:*    
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !Ref WriterQueue
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: '*'
+
+
   WriterFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -102,7 +151,7 @@ Resources:
       Role: !Ref RoleArn
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref AccountTableName
           ENV: cloud
       Events:
         SQSEvent:
@@ -111,9 +160,11 @@ Resources:
             Queue: !GetAtt WriterQueue.Arn
             BatchSize: 10
             Enabled: true
+            FunctionResponseTypes:
+            - ReportBatchItemFailures
       Policies:
         - DynamoDBWritePolicy:
-            TableName: !Ref TableName
+            TableName: !Ref AccountTableName
         - Statement:
             - Effect: Allow
               Action:
@@ -148,12 +199,10 @@ Resources:
         MessageBody: "$request.body"
       PayloadFormatVersion: "1.0"
 
-  #ApiGatewayPermission:
-  #  Type: AWS::Lambda::Permission
-  #  Properties:
-  #    Action: lambda:InvokeFunction
-  #    FunctionName: !Ref RegisterFunction
-  #    Principal: apigateway.amazonaws.com
-  #    SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/POST/register'
-#
-#
+# Rota POST API Gateway
+  PostRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiGateway
+      RouteKey: POST /writer
+      Target: !Sub 'integrations/${SqsIntegration}'

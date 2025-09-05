@@ -1,9 +1,9 @@
 package models
 
 type Log struct {
-	ID        string `dynamodbav:"id"`
-	Timestamp string `dynamodbav:"name"`
-	Level     string `dynamodbav:"level"`
-	Message   string `dynamodbav:"message"`
-	Cause     string `dynamodbav:"cause"`
+	ID        string `dynamodbav:"ID"`
+	Timestamp string `dynamodbav:"Timestamp"`
+	Level     string `dynamodbav:"Level"`
+	Message   string `dynamodbav:"Message"`
+	Cause     string `dynamodbav:"Cause"`
 }

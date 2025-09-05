@@ -21,9 +21,11 @@ func detectErrorCause(message string) string {
 	var data models.Data
 	if err := json.Unmarshal([]byte(message), &data); err != nil {
 		fmt.Println(err)
-		return "InvalidJson"
+		return "InvalidEvent:InvalidJson"
 	}
-
+	if data.Type != "account" && data.Type != "transaction" {
+		return "InvalidEvent:InvalidType"
+	}
 	if data.Type == "account" {
 		var acc models.Account
 		if err := json.Unmarshal(data.Data, &acc); err == nil {
@@ -80,10 +82,10 @@ func generateLog(message events.SQSMessage) logItem.Log {
 
 	logItem := logItem.Log{
 		ID:        message.MessageId,
+		Timestamp: time.Now().Format(time.RFC3339),
+		Level:     "Error",
 		Message:   message.Body,
 		Cause:     detectErrorCause(message.Body),
-		Level:     "Error",
-		Timestamp: time.Now().Format(time.RFC3339),
 	}
 	return logItem
 }
@@ -101,7 +103,6 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 	// Processa cada mensagem
 	for _, message := range sqsEvent.Records {
 		fmt.Printf("processando mensagem ID: %s, Body: %s", message.MessageId, message.Body)
-		fmt.Print(message.MessageId)
 
 		logItem := generateLog(message)
 
