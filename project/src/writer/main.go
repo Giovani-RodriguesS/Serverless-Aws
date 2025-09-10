@@ -55,7 +55,7 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 	var batchItemFailures []events.SQSBatchItemFailure
 
 	for _, message := range sqsEvent.Records {
-		fmt.Printf("processando mensagem ID: %s, Body: %s", message.MessageId, message.Body)
+		fmt.Printf("processando mensagem ID: %s", message.MessageId)
 
 		// Deserialização do JSON
 		data, err := parseJsonToItem(message.Body)

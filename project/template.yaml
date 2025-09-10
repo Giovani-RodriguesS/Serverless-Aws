@@ -22,7 +22,7 @@ Parameters:
 
 Globals:
   Function:
-    Timeout: 60
+    Timeout: 120
     MemorySize: 128
     Runtime: provided.al2023
     Architectures:
@@ -36,7 +36,7 @@ Resources:
   DeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      VisibilityTimeout: 70
+      VisibilityTimeout: 170
       QueueName: DeadLetterQueue
       MessageRetentionPeriod: 300
 
@@ -44,7 +44,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Ref WriterQueueName
-      VisibilityTimeout: 70
+      VisibilityTimeout: 170
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
         maxReceiveCount: 2

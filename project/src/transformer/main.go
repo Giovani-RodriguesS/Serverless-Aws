@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+
+	"github.com/Giovani-RodriguesS/Serverless-Aws/project/src/pkg/models"
 	"github.com/Giovani-RodriguesS/Serverless-Aws/project/src/pkg/sqs"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -45,12 +48,23 @@ func handler(ctx context.Context, s3Event events.S3Event) {
 
 		payload := buff.Bytes()[:numBytes]
 
+		// Deserialização do JSON
+		var items []models.Data
+
+		if err := json.Unmarshal(payload, &items); err != nil {
+			fmt.Printf("Erro ao deserializar o JSON: %v", err)
+			return
+		}
+
 		// Mensageria
-		err = sqs.PostMessages(string(payload))
+		err = sqs.PostMessages(items)
 
 		if err != nil {
 			fmt.Printf("Erro ao enviar mensagem para SQS: %v", err)
 		}
+		fmt.Printf("Arquivo enviado com sucesso, tamanho %d bytes\n", numBytes)
+
+
 
 	}
 }

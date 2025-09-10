@@ -6,5 +6,6 @@ s3_prefix = "serverless-it"
 region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "WriterQueueName=\"WriterQueue\" AccountTableName=\"AccountTable\" LogTableName=\"LogTable\" RoleArn=\"arn:aws:iam::471112928175:role/LabRole\" BucketName=\"data-bucket-471112928175\""
+parameter_overrides = "WriterQueueName=\"WriterQueue\" AccountTableName=\"AccountTable\" LogTableName=\"LogTable\" RoleArn=\"arn:aws:iam::531876074333:role/LabRole\" BucketName=\"items-bucket-47111\""
 image_repositories = []
+disable_rollback = true

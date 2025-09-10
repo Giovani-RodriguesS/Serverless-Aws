@@ -7,13 +7,3 @@ type Data struct {
 	Data json.RawMessage `json:"Data"`
 }
 
-/*
-{
-  "type": "account",
-  "data": {
-    "id": "123",
-    "name": "João Silva",
-    "email": "joao@email.com"
-  }
-}
-*/

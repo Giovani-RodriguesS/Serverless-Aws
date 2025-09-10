@@ -102,7 +102,7 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 
 	// Processa cada mensagem
 	for _, message := range sqsEvent.Records {
-		fmt.Printf("processando mensagem ID: %s, Body: %s", message.MessageId, message.Body)
+		fmt.Printf("processando mensagem ID: %s", message.MessageId)
 
 		logItem := generateLog(message)
 
