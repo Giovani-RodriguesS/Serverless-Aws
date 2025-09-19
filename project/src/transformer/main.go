@@ -64,8 +64,6 @@ func handler(ctx context.Context, s3Event events.S3Event) {
 		}
 		fmt.Printf("Arquivo enviado com sucesso, tamanho %d bytes\n", numBytes)
 
-
-
 	}
 }
 func main() {

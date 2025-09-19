@@ -2,47 +2,13 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/Giovani-RodriguesS/Serverless-Aws/project/src/pkg/database"
-	"github.com/Giovani-RodriguesS/Serverless-Aws/project/src/pkg/models"
-
+	"github.com/Giovani-RodriguesS/Serverless-Aws/project/src/writer/internal"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 )
-
-func parseJsonToItem(body string) (models.Data, error) {
-	// Converte o dado bruto para ser possivel identificar o objeto
-	var data models.Data
-	if err := json.Unmarshal([]byte(body), &data); err != nil {
-		return models.Data{}, err
-	}
-	return data, nil
-}
-
-func wrapUpItem(data models.Data) (any, error) {
-	// Identifica qual item será gravado no Dynamo
-	switch data.Type {
-	case "account":
-		var acc models.Account
-		if err := json.Unmarshal(data.Data, &acc); err != nil {
-			return nil, err
-		}
-
-		return &acc, nil
-
-	case "transaction":
-		var tsc models.Transaction
-		if err := json.Unmarshal(data.Data, &tsc); err != nil {
-			return nil, err
-		}
-		return &tsc, nil
-
-	default:
-		return nil, fmt.Errorf("tipo não reconhecido: %s", data.Type)
-	}
-}
 
 func handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResponse, error) {
 
@@ -58,7 +24,7 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 		fmt.Printf("processando mensagem ID: %s", message.MessageId)
 
 		// Deserialização do JSON
-		data, err := parseJsonToItem(message.Body)
+		data, err := internal.ParseJsonToItem(message.Body)
 
 		if err != nil {
 			fmt.Printf("Erro ao deserializar dados: %v", err)
@@ -66,7 +32,7 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 			continue
 		}
 
-		item, err := wrapUpItem(data)
+		item, err := internal.WrapUpItem(data)
 
 		if err != nil {
 			fmt.Printf("Erro ao empacotar item: %v", err)

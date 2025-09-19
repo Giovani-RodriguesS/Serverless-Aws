@@ -6,4 +6,3 @@ type Data struct {
 	Type string          `json:"Type"`
 	Data json.RawMessage `json:"Data"`
 }
-
