@@ -1,45 +1,50 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Sistema de Microserviços com Funções Lambda
+Description: Stack Principal - Recursos do Projeto Serverless AWS
 
 # Parâmetros globais
 Parameters:
-  Env:
+  WriterQueueName:
     Type: String
-    Default: dev
-    AllowedValues: [dev, prod]
+    Default: WriterQueue
+  AccountTableName:
+    Type: String
+    Default: DataTable
+  LogTableName:
+    Type: String
+    Default: LogTable
   RoleArn:
     Type: String
-    Default: arn:aws:iam::058264100464:role/LabRole
-  QueueName:
+    Description: ARN of the IAM role for Lambda functions
+  BucketName:
     Type: String
-    Default: register-queue
-  
+    Default: data-bucket-471112928175
 
-# Recursos principais
 Resources:
-  # Importar template de funções Lambda
-  LambdaFunctions:
-    Type: AWS::Serverless::Application
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      Location: ./resources/functions.yaml
+      TemplateURL: ./resources/
       Parameters:
-        Env: !Ref Env
-        RoleArn: !Ref RoleArn
-        QueueUrl: !Ref QueueUrl # Passa a URL da fila SQS como parâmetro para as funções Lambda
-        QueueARN: !Ref SQSQueueARN
-
-    SqsQueue:
-    Type: AWS::SQS::Queue
+  
+  ObservabilityStack:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      QueueName: !Ref QueueName # Nome da fila SQS
-      ReceiveMessageWaitTimeSeconds: 20 # Tempo de espera para verificar novas mensagens na fila
-      VisibilityTimeout: 60 # Tempo de visibilidade da mensagem na fila
-      MessageRetentionPeriod: 86400 # Tempo de retenção da mensagem na fila (1 dia)
+      TemplateURL: ./resources/
+      Parameters:
 
+  InfraStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./resources/
+      Parameters:
+  
+  ApiStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./resources/
+      Parameters:
 Outputs:
-  QueueUrl:
-    Value: !Ref SqsQueue # URL da fila SQS
-  SQSQueueARN:
-    Description: "ARN da fila SQS"
-    Value: !GetAtt SqsQueue.Arn
+  WriterQueueUrl:
+    Description: "URL of the Writer SQS Queue"
+    Value: !Ref WriterQueue

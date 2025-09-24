@@ -31,4 +31,6 @@ go.work
 
 **/.aws-sam
 
+docker/
+
 # End of https://www.toptal.com/developers/gitignore/api/sam,go

@@ -47,7 +47,7 @@ Resources:
       VisibilityTimeout: 170
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
-        maxReceiveCount: 2
+        maxReceiveCount: 1
 
   AccountTable:
     Type: AWS::DynamoDB::Table
