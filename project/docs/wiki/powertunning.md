@@ -1,21 +1,22 @@
-Lambda Power Tunning
+# Lambda Power Tuning
 
 ## Visão Geral
-```
-AWS Lambda Power Tuning é uma ferramenta open-source que ajuda a visualizar e aprimorar a configuração do processamento/memória das funções Lambda
 
-Essa ferramenta consiste numa maquina de estado do Step Functions que executa teste de carga na função escolhida e retorna uma saída que contém as informações obtidas através dos testes: uma avalição de qual melhor e pior configuração para a função testada.
-```
+>A`WS Lambda Power Tuning` é uma ferramenta open-source que ajuda a visualizar e aprimorar a configuração do processamento/memória das funções Lambda
+
+>Essa ferramenta consiste numa `máquina de estado do Step Functions` que executa teste de carga na função escolhida e retorna uma saída que contém as informações obtidas através dos testes: uma avalição de qual melhor e pior configuração para a função testada.
+
+
 ## Como Funciona
 - Você fornece o ARN (*Amazon Resource Name*) de uma função Lambda.
 
 - A ferramenta invoca essa função com diferentes configurações de memória (de 128 MB a 10 GB), você define.
 
-- Ela analisa os logs de execução e sugere a melhor configuração de memória para minimizar custos ou maximizar a performance.
+- Ela analisa os logs de execução e sugere a melhor configuração de memória para `minimizar custos` ou `maximizar a performance`.
 
 - A execução ocorre na sua própria conta AWS, simulando cenários reais como chamadas de API e cold starts.
 
-- Os resultados são apresentados em um gráfico, mostrando o custo e a velocidade médios para cada configuração.
+- Os resultados são apresentados em um gráfico, mostrando o `custo` e a `velocidade médios` para cada configuração.
 
 
 ### Parâmetros de Execução (no Momento da Execução)
