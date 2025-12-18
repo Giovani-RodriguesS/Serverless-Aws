@@ -1,4 +1,3 @@
-# Aplicação Serverless em Go
 
 ## 1. Visão Geral
 
@@ -71,7 +70,6 @@ O fluxo segue o diagrama representado acima:
 * **Framework:** AWS SAM CLI
 * **Serviços AWS:** Lambda, SQS, DynamoDB, S3, API Gateway, CloudWatch
 * **Deploy:** Infra como código via `template.yaml` (CloudFormation + SAM)
-* **Estratégia de Deploy:** Canary Deployment (10% em 5 min)
 
 ## Link: 
 - [AWS SDK para Go](https://aws.amazon.com/pt/sdk-for-go/)
